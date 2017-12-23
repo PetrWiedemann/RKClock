@@ -103,14 +103,14 @@ class ClockPanel extends JPanel implements Runnable {
 		Rectangle2D bounds;
 		
 		// Vykresleni podkladu s prechodem.
-        RadialGradientPaint rgp = new RadialGradientPaint(
-                new Point(getWidth() / 2, getHeight() / 2),
-                width,
-                new float[] {0.2f, 0.9f},
-                new Color[] {new Color(106, 145, 66), Color.WHITE}
-                );
-        g2.setPaint(rgp);
-        g2.fillOval(2, 2, width-4, height-4);
+		RadialGradientPaint rgp = new RadialGradientPaint(
+				new Point(getWidth() / 2, getHeight() / 2),
+				width,
+				new float[] {0.2f, 0.9f},
+				new Color[] {new Color(106, 145, 66), Color.WHITE}
+				);
+		g2.setPaint(rgp);
+		g2.fillOval(2, 2, width-4, height-4);
 		
         // Nastaveni fontu pro cislice a inicializace tridy FontRenderContext,
         // ktera se pouzije pro vypocet rozmeru potrebnych na vykresleni textu.
