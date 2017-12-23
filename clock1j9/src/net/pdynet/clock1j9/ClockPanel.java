@@ -112,8 +112,8 @@ class ClockPanel extends JPanel implements Runnable {
 		g2.setPaint(rgp);
 		g2.fillOval(2, 2, width-4, height-4);
 		
-        // Nastaveni fontu pro cislice a inicializace tridy FontRenderContext,
-        // ktera se pouzije pro vypocet rozmeru potrebnych na vykresleni textu.
+		// Nastaveni fontu pro cislice a inicializace tridy FontRenderContext,
+		// ktera se pouzije pro vypocet rozmeru potrebnych na vykresleni textu.
 		g2.setFont(clockFont);
 		FontRenderContext frc = g2.getFontRenderContext();
         
