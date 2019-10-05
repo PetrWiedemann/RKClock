@@ -12,6 +12,8 @@ import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -126,8 +128,8 @@ class ClockPanel extends JPanel implements Runnable {
 		// Vykresleni ciferniku po krocich 6°.
 		for (double angle = 0d; angle < 360d; angle += 6d) {
 			// Vypocet souradnice pro caru dal od stredu.
-			Point point2 = anglePoint(centerX, centerY, radiusMax, angle);
-			Point point1;
+			Point2D point2 = anglePoint(centerX, centerY, radiusMax, angle);
+			Point2D point1;
 			
 			if (angle % 30 == 0) {
 				// Pokud je uhel delitelny 30 beze zbytku, kreslime silnejsi caru a cislici.
@@ -142,7 +144,7 @@ class ClockPanel extends JPanel implements Runnable {
 				bounds = layout.getBounds();
 				textWidth = (int) Math.round(bounds.getWidth());
 				textHeight = (int) Math.round(bounds.getHeight());
-				g2.drawString(str, point1.x - textWidth / 2, point1.y + textHeight / 2);
+				g2.drawString(str, (float)point1.getX() - textWidth / 2, (float)point1.getY() + textHeight / 2);
 				
 				// Zvetseni hodnoty pro dalsi hodinu, ktera se bude kreslit.
 				// Pokud by cislo prekrocilo hodnotu 12, o 12 se snizi.
@@ -159,7 +161,8 @@ class ClockPanel extends JPanel implements Runnable {
 			}
 			
 			// Vkresleni cary rozdelujici cifernik.
-			g2.drawLine(point1.x, point1.y, point2.x, point2.y);
+			Line2D line = new Line2D.Double(point1, point2);
+			g2.draw(line);
 		}
 		
 		// Vykresleni datumu.
@@ -204,6 +207,7 @@ class ClockPanel extends JPanel implements Runnable {
 		int height = getHeight();
 		int centerX = width / 2;
 		int centerY = height / 2;
+		Point2D center = new Point2D.Double(centerX, centerY);
 		
 		// Polomery rucicek.
 		int radiusHour = Math.min(width, height) / 2 - 80;
@@ -213,17 +217,19 @@ class ClockPanel extends JPanel implements Runnable {
 		// 86400 sekund za den.
 		// time.toSecondOfDay() / 120 = time.toSecondOfDay() / 86400 * 2 * 360 
 		double hourAngle = time.toSecondOfDay() / 120d - 90d;
-		Point point = anglePoint(centerX, centerY, radiusHour, hourAngle);
+		Point2D point = anglePoint(centerX, centerY, radiusHour, hourAngle);
 		g2.setColor(Color.BLACK);
 		g2.setStroke(new BasicStroke(12, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));
-		g2.drawLine(centerX, centerY, point.x, point.y);
+		Line2D line = new Line2D.Double(center, point);
+		g2.draw(line);
 		//System.out.println(hourAngle);
 		
 		// (time.getMinute() * 60 + time.getSecond()) / 10 = (time.getMinute() * 60 + time.getSecond()) / 3600 * 360
 		double minuteAngle = (time.getMinute() * 60 + time.getSecond()) / 10d - 90d;
 		point = anglePoint(centerX, centerY, radiusMinute, minuteAngle);
 		g2.setStroke(new BasicStroke(8, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));
-		g2.drawLine(centerX, centerY, point.x, point.y);
+		line = new Line2D.Double(center, point);
+		g2.draw(line);
 		//System.out.println(minuteAngle);
 		
 		// time.getSecond() * 6 = time.getSecond() / 60 * 360
@@ -231,9 +237,14 @@ class ClockPanel extends JPanel implements Runnable {
 		point = anglePoint(centerX, centerY, radiusSecond, secondAngle);
 		g2.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));
 		g2.setColor(Color.RED);
-		g2.drawLine(centerX, centerY, point.x, point.y);
+		line = new Line2D.Double(center, point);
+		g2.draw(line);
 		//System.out.println(secondAngle);
 		
+		g2.setColor(Color.RED);
+		g2.fillOval(centerX - 10, centerY - 10, 20, 20);
+		g2.setColor(Color.ORANGE);
+		g2.fillOval(centerX - 5, centerY - 5, 10, 10);
 	}
 	
 	/**
@@ -245,18 +256,29 @@ class ClockPanel extends JPanel implements Runnable {
 	 * @param angle Uhel ve stupnich.
 	 * @return
 	 */
-	private Point anglePoint(int centerX, int centerY, int radius, double angle) {
+	private Point2D anglePoint(int centerX, int centerY, int radius, double angle) {
 		// Uhel se prevadi ze stupnu na Radiany, protoze funkce sin a cos pracuji v Radianech.
-		int x = centerX + (int)(radius * Math.cos(Math.toRadians(angle)));
-		int y = centerY + (int)(radius * Math.sin(Math.toRadians(angle)));
+		double x = centerX + (radius * Math.cos(Math.toRadians(angle)));
+		double y = centerY + (radius * Math.sin(Math.toRadians(angle)));
+		return new Point2D.Double(x, y);
+		/*
+		BigDecimal bdX = BigDecimal.valueOf(x);
+		BigDecimal bdY = BigDecimal.valueOf(y);
 		
-		return new Point(x, y);
+		return new Point2D.Double(bdX.setScale(0, java.math.RoundingMode.HALF_UP).intValue(), bdY.setScale(0, java.math.RoundingMode.HALF_UP).intValue());
+		//return new Point(bdX.setScale(0, java.math.RoundingMode.HALF_UP).intValue(), bdY.setScale(0, java.math.RoundingMode.HALF_UP).intValue());
+		*/
 	}
 	
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;
+		g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+		g2.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		
